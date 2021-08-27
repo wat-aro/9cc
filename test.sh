@@ -12,6 +12,9 @@ assert() {
   input="$2"
 
   ./9cc "$input" > tmp.s
+  if [ "$?" != 0 ]; then
+    exit 1
+  fi
   cc -o tmp tmp.s
   ./tmp
   actual="$?"
