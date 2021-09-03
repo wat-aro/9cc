@@ -1,4 +1,5 @@
 #include "9cc.h"
+#include <stdio.h>
 
 // 現在着目しているトークン
 Token *token;
@@ -17,12 +18,22 @@ bool consume(char *op) {
   return true;
 }
 
+Token *consume_ident() {
+  if (token->kind != TK_IDENT)
+    return false;
+  Token *tok = token;
+  token = token->next;
+  return tok;
+}
+
 // 次のトークンが期待している記号のときには、トークンを１つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len ||
-      memcmp(token->str, op, token->len))
-    error_at(token->str, "expected '%c'", op);
+      memcmp(token->str, op, token->len)) {
+    error_at(token->str, "expected '%s'\n", op);
+  }
+
   token = token->next;
 }
 
@@ -53,7 +64,10 @@ Node *new_node_num(int val) {
   return node;
 }
 
+Node **program();
+Node *stmt();
 Node *expr();
+Node *assign();
 Node *equality();
 Node *relational();
 Node *add();
@@ -61,8 +75,35 @@ Node *mul();
 Node *unary();
 Node *primary();
 
-// expr = equality
-Node *expr() { return equality(); }
+// program = stmt*
+Node **program() {
+  Node **code = calloc(100, sizeof(Node));
+  int i = 0;
+  while (!at_eof()) {
+    code[i++] = stmt();
+  }
+  code[i] = NULL;
+
+  return code;
+}
+
+// stmt = expr ";"
+Node *stmt() {
+  Node *node = expr();
+  expect(";");
+  return node;
+}
+
+// expr = assign
+Node *expr() { return assign(); }
+
+// assign = equality ("=" assign)?
+Node *assign() {
+  Node *node = equality();
+  if (consume("="))
+    node = new_node(ND_ASSIGN, node, assign());
+  return node;
+}
 
 // equality = relational ("==" relational | "!=" relational)*
 Node *equality() {
@@ -133,7 +174,7 @@ Node *unary() {
   return primary();
 }
 
-// primary = num | "(" expr ")"
+// primary = num | ident | "(" expr ")"
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -141,10 +182,18 @@ Node *primary() {
     return node;
   }
 
+  Token *tok = consume_ident();
+  if (tok) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    node->offset = (tok->str[0] - 'a' + 1) * 8;
+    return node;
+  }
+
   return new_node_num(expect_number());
 }
 
-Node *parse(Token *tok) {
+Node **parse(Token *tok) {
   token = tok;
-  return expr();
+  return program();
 }
