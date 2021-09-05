@@ -60,5 +60,9 @@ assert 30 'a = 2 + 3;b = 2 * 3;a * b;'
 assert 30 'foo = 2 + 3;bar = 2 * 3;foo * bar;'
 assert 1 'return 1;'
 assert 6 'foo = 2 * 3; return foo; return 5 * 2;'
+assert 10 'if (0 == 0) return 10; return 5;'
+assert 5 'if (0 == 1) return 10; return 5;'
+assert 10 'if (0 == 0) return 10; else return 100;'
+assert 100 'if (0 == 1) return 10; else return 100;'
 
 echo OK
