@@ -30,6 +30,7 @@ void gen(Node *node) {
     printf("  push rdi\n");
     return;
   }
+
   if (node->kind == ND_NUM) {
     printf("  push %d\n", node->val);
     return;
@@ -75,8 +76,6 @@ void gen(Node *node) {
     printf("  setle al\n");
     printf("  movzb rax, al\n");
     break;
-  case ND_NUM:
-    error("Parse error");
   }
 
   printf("  push rax\n");

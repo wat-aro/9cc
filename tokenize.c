@@ -42,6 +42,18 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
 
 bool startswith(char *p, char *q) { return memcmp(p, q, strlen(q)) == 0; }
 
+bool is_alphabet(char c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
+int alphabet_length(char *p) {
+  char *q = p;
+  while (is_alphabet(*q)) {
+    q++;
+  }
+  return &*q - &*p;
+}
+
 Token *tokenize(char *p) {
   user_input = p;
   Token head;
@@ -66,11 +78,6 @@ Token *tokenize(char *p) {
     // Single-letter punctuator
     if (strchr("+-*/()<>;=", *p)) {
       cur = new_token(TK_RESERVED, cur, p++, 1);
-      continue;
-    }
-
-    if ('a' <= *p && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p++, 1);
       continue;
     }
 
