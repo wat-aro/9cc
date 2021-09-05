@@ -59,7 +59,6 @@ typedef enum {
   ND_NUM,    // integer
   ND_RETURN, // return
   ND_IF,     // if
-  ND_WHILE,  // while
   ND_FOR,    // for
 } NodeKind;
 

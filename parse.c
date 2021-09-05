@@ -130,7 +130,7 @@ Node *stmt() {
     return node;
   } else if (consume_by_token(TK_WHILE)) {
     node = calloc(1, sizeof(Node));
-    node->kind = ND_WHILE;
+    node->kind = ND_FOR;
     expect("(");
     node->cond = expr();
     expect(")");
