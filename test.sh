@@ -67,5 +67,6 @@ assert 10 'if (0 == 0) return 10; else return 100;'
 assert 100 'if (0 == 1) return 10; else return 100;'
 assert 2 'while (0 == 1) return 1; return 2;'
 assert 0 'i = 10; while (i > 0) i = i - 1; return i;'
+assert 55 'result = 0; for (i = 0; i <= 10; i = i + 1) result = result + i; return result;'
 
 echo OK

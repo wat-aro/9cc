@@ -109,6 +109,7 @@ Node **program() {
 //      | "return" expr ";"
 //      | "if" "(" expr ")" stmt (else stmt)?
 //      | "while" "(" expr ")" stmt
+//      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 Node *stmt() {
   Node *node;
 
@@ -133,7 +134,25 @@ Node *stmt() {
     expect("(");
     node->cond = expr();
     expect(")");
-    node->then = stmt();
+    node->body = stmt();
+    return node;
+  } else if (consume_by_token(TK_FOR)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_FOR;
+    expect("(");
+    if (!consume(";")) {
+      node->init = expr();
+      expect(";");
+    }
+    if (!consume(";")) {
+      node->cond = expr();
+      expect(";");
+    }
+    if (!consume(")")) {
+      node->update = expr();
+      expect(")");
+    }
+    node->body = stmt();
     return node;
   } else {
     node = expr();
