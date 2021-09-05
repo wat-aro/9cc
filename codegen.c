@@ -59,6 +59,18 @@ void gen(Node *node) {
     }
     printf(".Lend%d:\n", if_count);
     return;
+  case ND_WHILE: {
+    int while_count = jump_count();
+    printf(".Lbegin%d:\n", while_count);
+    gen(node->cond);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je  .Lend%d\n", while_count);
+    gen(node->then);
+    printf("  jmp .Lbegin%d\n", while_count);
+    printf(".Lend%d:\n", while_count);
+    return;
+  }
   }
 
   if (node->kind == ND_NUM) {
