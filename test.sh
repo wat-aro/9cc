@@ -58,5 +58,7 @@ assert 2 'a = 2;'
 assert 2 'a=2;a;'
 assert 30 'a = 2 + 3;b = 2 * 3;a * b;'
 assert 30 'foo = 2 + 3;bar = 2 * 3;foo * bar;'
+assert 1 'return 1;'
+assert 6 'foo = 2 * 3; return foo; return 5 * 2;'
 
 echo OK

@@ -29,6 +29,13 @@ bool consume(char *op) {
   return true;
 }
 
+bool consume_by_token(TokenKind kind) {
+  if (token->kind != kind)
+    return false;
+  token = token->next;
+  return true;
+}
+
 Token *consume_ident() {
   if (token->kind != TK_IDENT)
     return false;
@@ -99,9 +106,20 @@ Node **program() {
 }
 
 // stmt = expr ";"
+//      | "return" expr ";"
 Node *stmt() {
-  Node *node = expr();
-  expect(";");
+  Node *node;
+
+  if (consume_by_token(TK_RETURN)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
+  } else {
+    node = expr();
+  }
+
+  if (!consume(";"))
+    error_at(token->str, "';'ではないトークンです");
   return node;
 }
 

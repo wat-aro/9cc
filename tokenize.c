@@ -46,6 +46,10 @@ bool is_alphabet(char c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
+bool is_alnum(char c) {
+  return is_alphabet(c) || ('0' <= c && c <= '9') || (c == '_');
+}
+
 int alphabet_length(char *p) {
   char *q = p;
   while (is_alphabet(*q)) {
@@ -86,6 +90,19 @@ Token *tokenize(char *p) {
       char *q = p;
       cur->val = strtol(p, &p, 10);
       cur->len = p - q;
+      continue;
+    }
+
+    if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
+      cur = new_token(TK_RETURN, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
+    if ('a' <= *p && *p <= 'z') {
+      int length = alphabet_length(p);
+      cur = new_token(TK_IDENT, cur, p, length);
+      p += length;
       continue;
     }
 
