@@ -106,6 +106,7 @@ Node **program() {
 }
 
 // stmt = expr ";"
+//      | "{" stmt* "}"
 //      | "return" expr ";"
 //      | "if" "(" expr ")" stmt (else stmt)?
 //      | "while" "(" expr ")" stmt
@@ -113,7 +114,14 @@ Node **program() {
 Node *stmt() {
   Node *node;
 
-  if (consume_by_token(TK_RETURN)) {
+  if (consume("{")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_BLOCK;
+    for (int i = 0; !consume("}"); i++) {
+      node->statements[i] = stmt();
+    }
+    return node;
+  } else if (consume_by_token(TK_RETURN)) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();

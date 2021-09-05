@@ -60,6 +60,7 @@ typedef enum {
   ND_RETURN, // return
   ND_IF,     // if
   ND_FOR,    // for
+  ND_BLOCK,  // {}
 } NodeKind;
 
 typedef struct Node Node;
@@ -79,6 +80,9 @@ struct Node {
   Node *init;
   Node *update;
   Node *body;
+
+  // block
+  Node *statements[100]; // とりあえず100の固定配列にする
 };
 
 Node **parse(Token *tok);

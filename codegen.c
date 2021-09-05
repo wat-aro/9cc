@@ -77,6 +77,11 @@ void gen(Node *node) {
     printf(".Lend%d:\n", for_count);
     return;
   }
+  case ND_BLOCK:
+    for (int i = 0; node->statements[i]; i++) {
+      gen(node->statements[i]);
+    }
+    return;
   }
 
   if (node->kind == ND_NUM) {
