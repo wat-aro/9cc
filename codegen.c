@@ -82,6 +82,9 @@ void gen(Node *node) {
       gen(node->statements[i]);
     }
     return;
+  case ND_FUNCTION_CALL:
+    printf("  call %s\n", node->name);
+    return;
   }
 
   if (node->kind == ND_NUM) {

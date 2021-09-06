@@ -46,21 +46,22 @@ void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 
 typedef enum {
-  ND_ADD,    // +
-  ND_SUB,    // -
-  ND_MUL,    // *
-  ND_DIV,    // /
-  ND_EQ,     // ==
-  ND_NE,     // !=
-  ND_LT,     // <
-  ND_LE,     // <=
-  ND_ASSIGN, // =
-  ND_LVAR,   // ローカル変数
-  ND_NUM,    // integer
-  ND_RETURN, // return
-  ND_IF,     // if
-  ND_FOR,    // for
-  ND_BLOCK,  // {}
+  ND_ADD,           // +
+  ND_SUB,           // -
+  ND_MUL,           // *
+  ND_DIV,           // /
+  ND_EQ,            // ==
+  ND_NE,            // !=
+  ND_LT,            // <
+  ND_LE,            // <=
+  ND_ASSIGN,        // =
+  ND_LVAR,          // ローカル変数
+  ND_NUM,           // integer
+  ND_RETURN,        // return
+  ND_IF,            // if
+  ND_FOR,           // for
+  ND_BLOCK,         // {}
+  ND_FUNCTION_CALL, // call function
 } NodeKind;
 
 typedef struct Node Node;
@@ -83,6 +84,9 @@ struct Node {
 
   // block
   Node *statements[100]; // とりあえず100の固定配列にする
+
+  // function
+  char *name;
 };
 
 Node **parse(Token *tok);
