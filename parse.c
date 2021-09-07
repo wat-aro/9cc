@@ -253,7 +253,7 @@ Node *unary() {
 }
 
 // primary = num
-//         | ident ("(" ")")?
+//         | ident "(" (expr ("," expr)* )? ")"
 //         | "(" expr ")"
 Node *primary() {
   if (consume("(")) {
@@ -270,7 +270,18 @@ Node *primary() {
       char *str = calloc(tok->len, sizeof(char));
       memcpy(str, tok->str, tok->len);
       node->name = str;
-      expect(")");
+      node->len = 0;
+      if (!consume(")")) {
+        node->arguments[0] = expr();
+        node->len++;
+        for (int i = 1; consume(","); i++) {
+          if (i == 6)
+            error_at(token->str, "引数は6個までです");
+          node->arguments[i] = expr();
+          node->len++;
+        }
+        expect(")");
+      }
     } else {
       node->kind = ND_LVAR;
 

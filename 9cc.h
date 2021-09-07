@@ -87,6 +87,8 @@ struct Node {
 
   // function
   char *name;
+  Node *arguments[6]; // 引数の上限は6
+  int len;            // 引数の長さ
 };
 
 Node **parse(Token *tok);

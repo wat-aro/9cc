@@ -83,6 +83,30 @@ void gen(Node *node) {
     }
     return;
   case ND_FUNCTION_CALL:
+    // 引数を右から順に評価する
+    for (int i = node->len - 1; i >= 0; i--) {
+      if (node->arguments[i]) {
+        gen(node->arguments[i]);
+      }
+    }
+    // ABIに規定されている規定されているレジスタに引数を入れる
+    for (int i = 1; i <= node->len; i++) {
+      if (i == 1) {
+        printf("  pop rdi\n"); // 第1引数
+      } else if (i == 2) {
+        printf("  pop rsi\n"); // 第2引数
+      } else if (i == 3) {
+        printf("  pop rdx\n");
+      } else if (i == 4) {
+        printf("  pop rcx\n");
+      } else if (i == 5) {
+        printf("  pop r8\n");
+      } else if (i == 6) {
+        printf("  pop r9\n");
+      } else {
+        error("引数は6個までです");
+      }
+    }
     printf("  call %s\n", node->name);
     return;
   }
