@@ -83,7 +83,7 @@ struct Node {
   Node *body;
 
   // block
-  Node *statements[100]; // とりあえず100の固定配列にする
+  Node *next;
 
   // function
   char *name;

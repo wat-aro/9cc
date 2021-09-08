@@ -116,11 +116,14 @@ Node *stmt() {
   Node *node;
 
   if (consume("{")) {
+    Node head = {};
+    Node *cur = &head;
+    while (!consume("}"))
+      cur = cur->next = stmt();
+
     node = calloc(1, sizeof(Node));
     node->kind = ND_BLOCK;
-    for (int i = 0; !consume("}"); i++) {
-      node->statements[i] = stmt();
-    }
+    node->body = head.next;
     return node;
   } else if (consume_by_token(TK_RETURN)) {
     node = calloc(1, sizeof(Node));

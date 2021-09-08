@@ -78,9 +78,8 @@ void gen(Node *node) {
     return;
   }
   case ND_BLOCK:
-    for (int i = 0; node->statements[i]; i++) {
-      gen(node->statements[i]);
-    }
+    for (Node *n = node->body; n; n = n->next)
+      gen(n);
     return;
   case ND_FUNCTION_CALL:
     // 引数を右から順に評価する
