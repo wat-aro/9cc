@@ -268,23 +268,29 @@ Node *primary() {
   Token *tok = consume_ident();
   if (tok) {
     Node *node = calloc(1, sizeof(Node));
+    // funcation call
     if (consume("(")) {
       node->kind = ND_FUNCTION_CALL;
       char *str = calloc(tok->len, sizeof(char));
       memcpy(str, tok->str, tok->len);
       node->name = str;
-      node->len = 0;
+
+      // arguments
+      Node head = {};
+      Node *cur = &head;
       if (!consume(")")) {
-        node->arguments[0] = expr();
-        node->len++;
-        for (int i = 1; consume(","); i++) {
-          if (i == 6)
+        cur->next = expr();
+        int arg_length = 1;
+        while (!consume(")")) {
+          expect(",");
+          arg_length++;
+          if (arg_length > 6)
             error_at(token->str, "引数は6個までです");
-          node->arguments[i] = expr();
-          node->len++;
+          cur = cur->next;
+          cur->next = expr();
         }
-        expect(")");
       }
+      node->args = head.next;
     } else {
       node->kind = ND_LVAR;
 

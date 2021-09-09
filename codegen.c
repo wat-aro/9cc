@@ -1,5 +1,7 @@
 #include "9cc.h"
 
+void gen(Node *node);
+
 int count = 0;
 int jump_count() {
   int i = count;
@@ -14,6 +16,13 @@ void gen_lval(Node *node) {
   printf("  mov rax, rbp\n");
   printf("  sub rax, %d\n", node->offset);
   printf("  push rax\n");
+}
+
+void gen_args(Node *node) {
+  if (node) {
+    gen_args(node->next);
+    gen(node);
+  }
 }
 
 void gen(Node *node) {
@@ -82,14 +91,10 @@ void gen(Node *node) {
       gen(n);
     return;
   case ND_FUNCTION_CALL:
-    // 引数を右から順に評価する
-    for (int i = node->len - 1; i >= 0; i--) {
-      if (node->arguments[i]) {
-        gen(node->arguments[i]);
-      }
-    }
+    gen_args(node->args);
     // ABIに規定されている規定されているレジスタに引数を入れる
-    for (int i = 1; i <= node->len; i++) {
+    int i = 1;
+    for (Node *n = node->args; n; n = n->next) {
       if (i == 1) {
         printf("  pop rdi\n"); // 第1引数
       } else if (i == 2) {
@@ -105,6 +110,7 @@ void gen(Node *node) {
       } else {
         error("引数は6個までです");
       }
+      i++;
     }
     printf("  call %s\n", node->name);
     return;
