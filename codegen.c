@@ -112,6 +112,7 @@ void gen(Node *node) {
       i++;
     }
 
+    printf("  .align 16\n");
     printf("  call %s\n", node->name);
     printf("  push rax\n");
     return;
