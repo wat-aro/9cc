@@ -95,4 +95,8 @@ assert 21 'adder(a, bb, ccc, dddd, eeeee, ffffff) { return a + bb + ccc + dddd +
 assert  8 'fib(n) { if (n <= 0) { return 0; } else if (n == 1) { return 1; } if (n > 1) { return fib(n - 1) + fib(n - 2);}} main() { return fib(6); }'
 assert 70 'add(x, y, z) { return x + y + z; } sub(x, y) { return x - y; } main() { x = add(10, 20, 30); y = sub(20, 10); return x + y;}'
 
+# *, &
+assert 3 'main() { x = 3; y = &x; return *y; }'
+assert 3 'main() { x = 3; y = 5; z = &y + 8; return *z; }'
+
 echo OK
