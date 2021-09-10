@@ -26,18 +26,10 @@ bool equal(char *op) {
   return true;
 }
 
-// 次のトークンが期待している記号のときには、トークンを１つ読み勧めて
+// 次のトークンが期待している記号や識別子のときには、トークンを１つ読み勧めて
 // 真を返す。それ以外の場合には偽を返す。
 bool consume(char *op) {
-  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
-      memcmp(token->str, op, token->len))
-    return false;
-  token = token->next;
-  return true;
-}
-
-bool consume_by_token(TokenKind kind) {
-  if (token->kind != kind)
+  if (strlen(op) != token->len || memcmp(token->str, op, token->len))
     return false;
   token = token->next;
   return true;
@@ -51,11 +43,10 @@ Token *consume_ident() {
   return tok;
 }
 
-// 次のトークンが期待している記号のときには、トークンを１つ読み進める。
+// 次のトークンが期待している記号や識別子のときには、トークンを１つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op) {
-  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
-      memcmp(token->str, op, token->len)) {
+  if (strlen(op) != token->len || memcmp(token->str, op, token->len)) {
     error_at(token->str, "expected '%s'\n", op);
   }
 
@@ -204,22 +195,22 @@ Node *stmt() {
   if (equal("{")) {
     node = compound_stmt();
     return node;
-  } else if (consume_by_token(TK_RETURN)) {
+  } else if (consume("return")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
-  } else if (consume_by_token(TK_IF)) {
+  } else if (consume("if")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_IF;
     expect("(");
     node->cond = expr();
     expect(")");
     node->then = stmt();
-    if (consume_by_token(TK_ELSE)) {
+    if (consume("else")) {
       node->els = stmt();
     }
     return node;
-  } else if (consume_by_token(TK_WHILE)) {
+  } else if (consume("while")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_FOR;
     expect("(");
@@ -227,7 +218,7 @@ Node *stmt() {
     expect(")");
     node->body = stmt();
     return node;
-  } else if (consume_by_token(TK_FOR)) {
+  } else if (consume("for")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_FOR;
     expect("(");
