@@ -65,7 +65,8 @@ typedef enum {
   ND_FUNCTION,      // function
   ND_ARG,           // arg
   ND_ADDR,          // & address
-  ND_DEREF          // * dereference
+  ND_DEREF,         // * dereference
+  ND_DECLARE,       // int a;
 } NodeKind;
 
 typedef struct Node Node;

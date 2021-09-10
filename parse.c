@@ -111,9 +111,9 @@ Node *args() {
   Node head = {};
   Node *cur = &head;
 
-  Token *tok = consume_ident();
-
-  if (tok) {
+  if (!consume(")")) {
+    expect("int");
+    Token *tok = consume_ident();
     cur->next = new_node(ND_LVAR, NULL, NULL);
     cur = cur->next;
     LVar *lvar = calloc(1, sizeof(LVar));
@@ -130,6 +130,7 @@ Node *args() {
 
     while (!consume(")")) {
       expect(",");
+      expect("int");
       tok = consume_ident();
       cur->next = new_node(ND_LVAR, NULL, NULL);
       cur = cur->next;
@@ -141,15 +142,14 @@ Node *args() {
       cur->offset = lvar->offset;
       locals = lvar;
     }
-  } else {
-    expect(")");
   }
 
   return head.next;
 }
 
-// function = ident args compound_stmt
+// function = "int" ident args compound_stmt
 Node *function() {
+  expect("int");
   locals = NULL;
   Node *node = new_node(ND_FUNCTION, NULL, NULL);
   Token *tok = consume_ident();
@@ -245,8 +245,27 @@ Node *stmt() {
   return node;
 }
 
-// expr = assign
-Node *expr() { return assign(); }
+// expr = "int" ident
+//      | assign
+Node *expr() {
+  if (consume("int")) {
+    Token *tok = consume_ident();
+    Node *node = new_node(ND_DECLARE, NULL, NULL);
+    LVar *lvar = calloc(1, sizeof(LVar));
+    lvar->next = locals;
+    lvar->name = tok->str;
+    lvar->len = tok->len;
+    if (locals == NULL) {
+      lvar->offset = 8;
+    } else {
+      lvar->offset = locals->offset + 8;
+    }
+    node->offset = lvar->offset;
+    locals = lvar;
+    return node;
+  }
+  return assign();
+}
 
 // assign = equality ("=" assign)?
 Node *assign() {
@@ -375,17 +394,7 @@ Node *primary() {
       if (lvar) {
         node->offset = lvar->offset;
       } else {
-        lvar = calloc(1, sizeof(LVar));
-        lvar->next = locals;
-        lvar->name = tok->str;
-        lvar->len = tok->len;
-        if (locals == NULL) {
-          lvar->offset = 8;
-        } else {
-          lvar->offset = locals->offset + 8;
-        }
-        node->offset = lvar->offset;
-        locals = lvar;
+        error_at(tok->str, "undeclared local variables");
       }
     }
     return node;
