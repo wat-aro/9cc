@@ -18,6 +18,14 @@ LVar *find_lvar(Token *tok) {
 // Parser
 //
 
+// 次のトークンが期待している文字列のときには、//
+// 真を返す。それ以外の場合には偽を返す。
+bool equal(char *op) {
+  if (strlen(op) != token->len || memcmp(token->str, op, token->len))
+    return false;
+  return true;
+}
+
 // 次のトークンが期待している記号のときには、トークンを１つ読み勧めて
 // 真を返す。それ以外の場合には偽を返す。
 bool consume(char *op) {
@@ -83,6 +91,7 @@ Node *new_node_num(int val) {
 
 Node **program();
 Node *function();
+Node *compound_stmt();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -148,21 +157,7 @@ Node *args() {
   return head.next;
 }
 
-// body = "{" stmt* "}"
-Node *body() {
-  expect("{");
-  Node head = {};
-  Node *cur = &head;
-
-  while (!consume("}")) {
-    cur->next = stmt();
-    cur = cur->next;
-  }
-
-  return head.next;
-}
-
-// function = ident args body
+// function = ident args compound_stmt
 Node *function() {
   locals = NULL;
   Node *node = new_node(ND_FUNCTION, NULL, NULL);
@@ -178,14 +173,27 @@ Node *function() {
   node->args = args();
 
   // Parse function bodies
-  node->body = body();
+  node->body = compound_stmt()->body;
 
   node->locals = locals;
   return node;
 }
 
+// compound_stmt = "{" stmt* "}"
+Node *compound_stmt() {
+  expect("{");
+  Node head = {};
+  Node *cur = &head;
+  while (!consume("}"))
+    cur = cur->next = stmt();
+
+  Node *node = new_node(ND_BLOCK, NULL, NULL);
+  node->body = head.next;
+  return node;
+}
+
 // stmt = expr ";"
-//      | "{" stmt* "}"
+//      | compound_stmt
 //      | "return" expr ";"
 //      | "if" "(" expr ")" stmt (else stmt)?
 //      | "while" "(" expr ")" stmt
@@ -193,15 +201,8 @@ Node *function() {
 Node *stmt() {
   Node *node;
 
-  if (consume("{")) {
-    Node head = {};
-    Node *cur = &head;
-    while (!consume("}"))
-      cur = cur->next = stmt();
-
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_BLOCK;
-    node->body = head.next;
+  if (equal("{")) {
+    node = compound_stmt();
     return node;
   } else if (consume_by_token(TK_RETURN)) {
     node = calloc(1, sizeof(Node));
