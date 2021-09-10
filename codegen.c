@@ -2,6 +2,8 @@
 
 void gen(Node *node);
 
+char *argument_register[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 int count = 0;
 int jump_count() {
   int i = count;
@@ -87,33 +89,48 @@ void gen(Node *node) {
     return;
   }
   case ND_BLOCK:
-    for (Node *n = node->body; n; n = n->next)
+    for (Node *n = node->body; n; n = n->next) {
       gen(n);
+    }
     return;
-  case ND_FUNCTION_CALL:
+  case ND_FUNCTION_CALL: {
     gen_args(node->args);
     // ABIに規定されている規定されているレジスタに引数を入れる
-    int i = 1;
+    int i = 0;
     for (Node *n = node->args; n; n = n->next) {
-      if (i == 1) {
-        printf("  pop rdi\n"); // 第1引数
-      } else if (i == 2) {
-        printf("  pop rsi\n"); // 第2引数
-      } else if (i == 3) {
-        printf("  pop rdx\n");
-      } else if (i == 4) {
-        printf("  pop rcx\n");
-      } else if (i == 5) {
-        printf("  pop r8\n");
-      } else if (i == 6) {
-        printf("  pop r9\n");
-      } else {
-        error("引数は6個までです");
-      }
+      if (i >= 6)
+        error("引数は6個までです\n");
+      printf("  pop %s\n", argument_register[i]);
       i++;
     }
+
     printf("  call %s\n", node->name);
+    printf("  push rax\n");
     return;
+  }
+  case ND_FUNCTION: {
+    printf("%s:\n", node->name);
+    // プロローグ
+    // 変数26個分の領域を確保する
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+    printf("  sub rsp, 208\n");
+
+    int i = 0;
+    for (Node *n = node->args; n; n = n->next) {
+      gen_lval(n);
+      printf("  push %s\n", argument_register[i]);
+      printf("  pop rdi\n");
+      printf("  pop rax\n");
+      printf("  mov [rax], rdi\n");
+      printf("  push rdi\n");
+      i++;
+    }
+    for (Node *n = node->body; n; n = n->next) {
+      gen(n);
+    }
+    return;
+  }
   }
 
   if (node->kind == ND_NUM) {
@@ -172,26 +189,9 @@ void codegen(Node **code) {
   // アセンブリの前半部分を出力
   printf(".intel_syntax noprefix\n");
   printf(".globl main\n");
-  printf("main:\n");
-
-  // プロローグ
-  // 変数26個分の領域を確保する
-  printf("  push rbp\n");
-  printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 208\n");
 
   // 先頭の式から順にコード生成
   for (int i = 0; code[i]; i++) {
     gen(code[i]);
-
-    // 式の評価結果としてスタックに一つの値が残っている
-    // はずなので、スタックが溢れないようにポップしておく
-    printf("  pop rax\n");
   }
-
-  // エピローグ
-  // 最後の式の結果がRAXに残っているのでそれが返り値になる
-  printf("  mov rsp, rbp\n");
-  printf("  pop rbp\n");
-  printf("  ret\n");
 }

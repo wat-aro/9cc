@@ -62,6 +62,8 @@ typedef enum {
   ND_FOR,           // for
   ND_BLOCK,         // {}
   ND_FUNCTION_CALL, // call function
+  ND_FUNCTION,      // function
+  ND_ARG,           // arg
 } NodeKind;
 
 typedef struct Node Node;
@@ -85,7 +87,7 @@ struct Node {
   // block
   Node *next;
 
-  // function
+  // function call
   char *name;
   Node *args;
 };

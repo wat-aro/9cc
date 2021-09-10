@@ -1,6 +1,4 @@
 #include "9cc.h"
-#include <stdio.h>
-#include <string.h>
 
 // 現在着目しているトークン
 Token *token;
@@ -84,6 +82,7 @@ Node *new_node_num(int val) {
 }
 
 Node **program();
+Node *function();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -99,11 +98,89 @@ Node **program() {
   Node **code = calloc(100, sizeof(Node));
   int i = 0;
   while (!at_eof()) {
-    code[i++] = stmt();
+    code[i++] = function();
   }
   code[i] = NULL;
 
   return code;
+}
+
+// args = "(" (ident ("," ident)*)? ")"
+Node *args() {
+  expect("(");
+  Node head = {};
+  Node *cur = &head;
+
+  Token *tok = consume_ident();
+
+  if (tok) {
+    cur->next = new_node(ND_LVAR, NULL, NULL);
+    cur = cur->next;
+    LVar *lvar = calloc(1, sizeof(LVar));
+    lvar->next = locals;
+    lvar->name = tok->str;
+    lvar->len = tok->len;
+    if (locals == NULL) {
+      lvar->offset = 8;
+    } else {
+      lvar->offset = locals->offset + 8;
+    }
+    cur->offset = lvar->offset;
+    locals = lvar;
+
+    while (!consume(")")) {
+      expect(",");
+      tok = consume_ident();
+      cur->next = new_node(ND_LVAR, NULL, NULL);
+      cur = cur->next;
+      LVar *lvar = calloc(1, sizeof(LVar));
+      lvar->next = locals;
+      lvar->name = tok->str;
+      lvar->len = tok->len;
+      lvar->offset = locals->offset + 8;
+      cur->offset = lvar->offset;
+      locals = lvar;
+    }
+  } else {
+    expect(")");
+  }
+
+  return head.next;
+}
+
+// body = "{" stmt* "}"
+Node *body() {
+  expect("{");
+  Node head = {};
+  Node *cur = &head;
+
+  while (!consume("}")) {
+    cur->next = stmt();
+    cur = cur->next;
+  }
+
+  return head.next;
+}
+
+// function = ident args body
+Node *function() {
+  locals = NULL;
+  Node *node = new_node(ND_FUNCTION, NULL, NULL);
+  Token *tok = consume_ident();
+  if (!tok)
+    error_at(tok->str, "Expected function name\n");
+  // Parse function name
+  char *func_name = calloc(tok->len, sizeof(char));
+  strncpy(func_name, tok->str, tok->len);
+  node->name = func_name;
+
+  // Parse arguments
+  node->args = args();
+
+  // Parse function bodies
+  node->body = body();
+
+  return node;
 }
 
 // stmt = expr ";"
@@ -291,7 +368,7 @@ Node *primary() {
         }
       }
       node->args = head.next;
-    } else {
+    } else { // variable
       node->kind = ND_LVAR;
 
       LVar *lvar = find_lvar(tok);
