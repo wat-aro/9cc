@@ -180,6 +180,7 @@ Node *function() {
   // Parse function bodies
   node->body = body();
 
+  node->locals = locals;
   return node;
 }
 

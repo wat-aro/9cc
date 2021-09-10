@@ -27,6 +27,14 @@ void gen_args(Node *node) {
   }
 }
 
+int locals_size(LVar *locals) {
+  int offset = 0;
+  for (LVar *var = locals; var; var = var->next) {
+    offset = locals->offset;
+  }
+  return offset;
+}
+
 void gen(Node *node) {
   switch (node->kind) {
   case ND_NUM:
@@ -114,7 +122,11 @@ void gen(Node *node) {
     // 変数26個分の領域を確保する
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
-    printf("  sub rsp, 208\n");
+    int offset = locals_size(node->locals);
+
+    if (node->locals) {
+      printf("  sub rsp, %d\n", locals_size(node->locals) + 8);
+    }
 
     int i = 0;
     for (Node *n = node->args; n; n = n->next) {

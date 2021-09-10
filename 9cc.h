@@ -90,6 +90,7 @@ struct Node {
   // function call
   char *name;
   Node *args;
+  LVar *locals;
 };
 
 Node **parse(Token *tok);
