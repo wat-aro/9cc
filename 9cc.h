@@ -29,6 +29,13 @@ struct Token {
   int len;        // トークンの長さ
 };
 
+struct Type {
+  enum { INT, PTR } ty;
+  struct Type *ptr_to;
+};
+
+typedef struct Type Type;
+
 // ローカル変数の型
 typedef struct LVar LVar;
 struct LVar {
@@ -94,6 +101,7 @@ struct Node {
   char *name;
   Node *args;
   LVar *locals;
+  Type *type; // 変数の型
 };
 
 Node **parse(Token *tok);

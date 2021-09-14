@@ -170,13 +170,61 @@ Node *function() {
   return node;
 }
 
-// compound_stmt = "{" stmt* "}"
+// declaration_specifier = "int"
+Type *declaration_specifier() {
+  expect("int");
+  Type *ty = calloc(1, sizeof(Type));
+  ty->ty = INT;
+  return ty;
+}
+
+Type *pointer_to(Type *ty) {
+  Type *type = calloc(1, sizeof(Type));
+  type->ty = PTR;
+  type->ptr_to = ty;
+  return type;
+}
+
+// declaration = declaration_specifier "*"* ident ";"
+Node *declaration() {
+  Type *type = declaration_specifier();
+  Node head = {};
+  Node *cur = &head;
+
+  while (!consume(";")) {
+    while (consume("*"))
+      type = pointer_to(type);
+
+    Token *tok = consume_ident();
+    cur->next = new_node(ND_LVAR, NULL, NULL);
+    cur = cur->next;
+    LVar *lvar = calloc(1, sizeof(LVar));
+    lvar->next = locals;
+    lvar->name = tok->str;
+    lvar->len = tok->len;
+    if (locals)
+      lvar->offset = locals->offset + 8;
+    else
+      lvar->offset = 8;
+    cur->offset = lvar->offset;
+    cur->type = type;
+    locals = lvar;
+  }
+
+  return head.next;
+}
+
+// compound_stmt = "{" (declaration | stmt)* "}"
 Node *compound_stmt() {
   expect("{");
   Node head = {};
   Node *cur = &head;
-  while (!consume("}"))
-    cur = cur->next = stmt();
+  while (!consume("}")) {
+    if (equal("int"))
+      cur = cur->next = declaration();
+    else
+      cur = cur->next = stmt();
+  }
 
   Node *node = new_node(ND_BLOCK, NULL, NULL);
   node->body = head.next;
@@ -245,27 +293,8 @@ Node *stmt() {
   return node;
 }
 
-// expr = "int" ident
-//      | assign
-Node *expr() {
-  if (consume("int")) {
-    Token *tok = consume_ident();
-    Node *node = new_node(ND_DECLARE, NULL, NULL);
-    LVar *lvar = calloc(1, sizeof(LVar));
-    lvar->next = locals;
-    lvar->name = tok->str;
-    lvar->len = tok->len;
-    if (locals == NULL) {
-      lvar->offset = 8;
-    } else {
-      lvar->offset = locals->offset + 8;
-    }
-    node->offset = lvar->offset;
-    locals = lvar;
-    return node;
-  }
-  return assign();
-}
+// expr = assign
+Node *expr() { return assign(); }
 
 // assign = equality ("=" assign)?
 Node *assign() {
