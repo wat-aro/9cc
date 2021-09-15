@@ -107,3 +107,12 @@ struct Node {
 Node **parse(Token *tok);
 
 void codegen();
+
+// type
+
+bool is_integer(Type *type);
+bool is_pointer(Type *type);
+Type *pointer_to(Type *ty);
+void add_type(Node *node);
+
+extern Type *type_int;

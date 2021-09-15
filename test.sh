@@ -97,9 +97,10 @@ assert 70 'int add(int x, int y, int z) { return x + y + z; } int sub(int x, int
 
 # # *, &
 assert 3 'int main() { int x; int y; x = 3; y = &x; return *y; }'
-assert 3 'int main() { int x; int y; int z; x = 3; y = 5; z = &y + 8; return *z; }'
+assert 3 'int main() { int x; int y; int z; x = 3; y = 5; z = &y + 1; return *z; }'
 
 # pointer type
 assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x; }'
+assert 3 'int main() { int x; int *y; int z; y = &x; *y = 3; z = 2; return x; }'
 
 echo OK

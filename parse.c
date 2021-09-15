@@ -174,16 +174,8 @@ Node *function() {
 // declaration_specifier = "int"
 Type *declaration_specifier() {
   expect("int");
-  Type *ty = calloc(1, sizeof(Type));
-  ty->ty = INT;
+  Type *ty = type_int;
   return ty;
-}
-
-Type *pointer_to(Type *ty) {
-  Type *type = calloc(1, sizeof(Type));
-  type->ty = PTR;
-  type->ptr_to = ty;
-  return type;
 }
 
 // declaration = declaration_specifier "*"* ident ";"
@@ -330,15 +322,67 @@ Node *relational() {
   }
 };
 
+Node *new_add(Node *lhs, Node *rhs) {
+  add_type(lhs);
+  add_type(rhs);
+
+  // num + num
+  if (is_integer(lhs->type) && is_integer(rhs->type)) {
+    Node *node = new_node(ND_ADD, lhs, rhs);
+    node->type = type_int;
+    return node;
+  }
+  // num + ptr => ptr + num
+  if (is_integer(lhs->type) && is_pointer(rhs->type)) {
+    Node *tmp = lhs;
+    lhs = rhs;
+    rhs = lhs;
+  }
+
+  // ptr + num
+  if (lhs->type->ptr_to->ty == INT) {
+    rhs = new_node(ND_MUL, rhs, new_node_num(8));
+  } else {
+    rhs = new_node(ND_MUL, rhs, new_node_num(8));
+  }
+  Node *node = new_node(ND_ADD, lhs, rhs);
+  add_type(node);
+  return node;
+}
+
+Node *new_sub(Node *lhs, Node *rhs) {
+  add_type(lhs);
+  add_type(rhs);
+
+  // num - num
+  if (is_integer(lhs->type) && is_integer(rhs->type)) {
+    return new_node(ND_SUB, lhs, rhs);
+  }
+  // num + ptr => ptr + num
+  if (is_integer(lhs->type) && is_pointer(rhs->type)) {
+    Node *tmp = lhs;
+    lhs = rhs;
+    rhs = lhs;
+  }
+
+  // ptr + num
+  if (lhs->type->ptr_to->ty == INT) {
+    rhs = new_node(ND_MUL, rhs, new_node_num(8));
+  } else {
+    rhs = new_node(ND_MUL, rhs, new_node_num(8));
+  }
+  return new_node(ND_SUB, lhs, rhs);
+}
+
 // add = mul ("+" mul | "-" mul)*
 Node *add() {
   Node *node = mul();
 
   for (;;) {
     if (consume("+"))
-      node = new_node(ND_ADD, node, mul());
+      node = new_add(node, mul());
     else if (consume("-"))
-      node = new_node(ND_SUB, node, mul());
+      node = new_sub(node, mul());
     else
       return node;
   }
@@ -423,7 +467,9 @@ Node *primary() {
     return node;
   }
 
-  return new_node_num(expect_number());
+  Node *node = new_node_num(expect_number());
+  node->type = type_int;
+  return node;
 }
 
 Node **parse(Token *tok) {
