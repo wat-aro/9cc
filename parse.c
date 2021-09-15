@@ -80,6 +80,19 @@ Node *new_node_num(int val) {
   return node;
 }
 
+LVar *new_lvar(Token *ident, LVar *next_lvar) {
+  LVar *lvar = calloc(1, sizeof(LVar));
+  lvar->next = locals;
+  lvar->name = ident->str;
+  lvar->len = ident->len;
+  if (locals == NULL) {
+    lvar->offset = 8;
+  } else {
+    lvar->offset = locals->offset + 8;
+  }
+  return lvar;
+}
+
 Node **program();
 Node *function();
 Node *compound_stmt();
@@ -116,15 +129,7 @@ Node *args() {
     Token *tok = consume_ident();
     cur->next = new_node(ND_LVAR, NULL, NULL);
     cur = cur->next;
-    LVar *lvar = calloc(1, sizeof(LVar));
-    lvar->next = locals;
-    lvar->name = tok->str;
-    lvar->len = tok->len;
-    if (locals == NULL) {
-      lvar->offset = 8;
-    } else {
-      lvar->offset = locals->offset + 8;
-    }
+    LVar *lvar = new_lvar(tok, locals);
     cur->offset = lvar->offset;
     locals = lvar;
 
@@ -134,11 +139,7 @@ Node *args() {
       tok = consume_ident();
       cur->next = new_node(ND_LVAR, NULL, NULL);
       cur = cur->next;
-      LVar *lvar = calloc(1, sizeof(LVar));
-      lvar->next = locals;
-      lvar->name = tok->str;
-      lvar->len = tok->len;
-      lvar->offset = locals->offset + 8;
+      LVar *lvar = new_lvar(tok, locals);
       cur->offset = lvar->offset;
       locals = lvar;
     }
@@ -198,14 +199,7 @@ Node *declaration() {
     Token *tok = consume_ident();
     cur->next = new_node(ND_LVAR, NULL, NULL);
     cur = cur->next;
-    LVar *lvar = calloc(1, sizeof(LVar));
-    lvar->next = locals;
-    lvar->name = tok->str;
-    lvar->len = tok->len;
-    if (locals)
-      lvar->offset = locals->offset + 8;
-    else
-      lvar->offset = 8;
+    LVar *lvar = new_lvar(tok, locals);
     cur->offset = lvar->offset;
     cur->type = type;
     locals = lvar;
@@ -334,7 +328,7 @@ Node *relational() {
     else
       return node;
   }
-}
+};
 
 // add = mul ("+" mul | "-" mul)*
 Node *add() {
