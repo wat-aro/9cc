@@ -127,7 +127,6 @@ void gen(Node *node) {
     // 変数26個分の領域を確保する
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
-    int offset = locals_size(node->locals);
 
     if (node->locals) {
       printf("  sub rsp, %d\n", locals_size(node->locals));
