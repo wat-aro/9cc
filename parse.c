@@ -189,7 +189,7 @@ Node *declaration() {
       type = pointer_to(type);
 
     Token *tok = consume_ident();
-    cur->next = new_node(ND_LVAR, NULL, NULL);
+    cur->next = new_node(ND_DECLARE, NULL, NULL);
     cur = cur->next;
     LVar *lvar = new_lvar(tok, locals);
     cur->offset = lvar->offset;
