@@ -130,7 +130,7 @@ void gen(Node *node) {
     int offset = locals_size(node->locals);
 
     if (node->locals) {
-      printf("  sub rsp, %d\n", locals_size(node->locals) + 8);
+      printf("  sub rsp, %d\n", locals_size(node->locals));
     }
 
     int i = 0;
