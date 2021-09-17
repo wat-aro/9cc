@@ -30,7 +30,7 @@ struct Token {
 };
 
 struct Type {
-  enum { INT, PTR } ty;
+  enum { VOID, INT, PTR } ty;
   struct Type *ptr_to;
 };
 
@@ -115,3 +115,5 @@ Type *pointer_to(Type *ty);
 void add_type(Node *node);
 
 extern Type *type_int;
+
+int type_size(Type *type);
