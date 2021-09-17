@@ -103,4 +103,9 @@ assert 3 'int main() { int x; int y; int *z; x = 3; y = 5; z = &y + 1; return *z
 assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x; }'
 assert 3 'int main() { int x; int *y; int z; y = &x; *y = 3; z = 2; return x; }'
 
+# sizeof
+assert 4 'int main() { return sizeof(1); }'
+assert 4 'int main() { return sizeof(sizeof(1)); }'
+assert 8 'int main() { int *x; return sizeof(x); }'
+
 echo OK

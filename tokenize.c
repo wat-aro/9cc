@@ -123,6 +123,12 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if (strncmp(p, "sizeof", 6) == 0 && !is_alnum(p[6])) {
+      cur = new_token(TK_SIZEOF, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       int length = alphabet_length(p);
       cur = new_token(TK_IDENT, cur, p, length);

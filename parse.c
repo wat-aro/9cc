@@ -403,11 +403,21 @@ Node *mul() {
   }
 }
 
-// unary = "+"? primary
+Node *new_sizeof() {
+  Node *node = unary();
+  add_type(node);
+  int size = type_size(node->type);
+  return new_node_num(size);
+}
+
+// unary = "sizeof" unary
+//       | "+"? primary
 //       | "-"? primary
 //       | "*" unary
 //       | "&" unary
 Node *unary() {
+  if (consume("sizeof"))
+    return new_sizeof();
   if (consume("+"))
     return primary();
   if (consume("-"))
