@@ -70,7 +70,6 @@ typedef enum {
   ND_BLOCK,         // {}
   ND_FUNCTION_CALL, // call function
   ND_FUNCTION,      // function
-  ND_ARG,           // arg
   ND_ADDR,          // & address
   ND_DEREF,         // * dereference
   ND_DECLARE,       // int a;

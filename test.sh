@@ -92,7 +92,7 @@ assert  8 'int foo(int x) { return x + x; } int main() { return foo(4); }'
 assert 11 'int foo(int x, int y) { return x + y; } int main() { return foo(4, 7); }'
 assert 21 'int adder(int a, int bb, int ccc, int dddd, int eeeee, int ffffff) { return a + bb + ccc + dddd + eeeee + ffffff; } int main() { return adder(1,2,3,4,5,6); }'
 
-assert  8 'int fib(int n) { if (n <= 0) { return 0; } else if (n == 1) { return 1; } if (n > 1) { return fib(n - 1) + fib(n - 2);}} int main() { return fib(6); }'
+assert  8 'int fib(int n) { if (n <= 0) { return 0; } else if (n == 1) { return 1; } else if (n > 1) { return fib(n - 1) + fib(n - 2);}} int main() { return fib(6); }'
 assert 70 'int add(int x, int y, int z) { return x + y + z; } int sub(int x, int y) { return x - y; } int main() { int x; x = add(10, 20, 30); int y; y = sub(20, 10); return x + y;}'
 
 # # *, &
