@@ -96,8 +96,8 @@ assert  8 'int fib(int n) { if (n <= 0) { return 0; } else if (n == 1) { return 
 assert 70 'int add(int x, int y, int z) { return x + y + z; } int sub(int x, int y) { return x - y; } int main() { int x; x = add(10, 20, 30); int y; y = sub(20, 10); return x + y;}'
 
 # # *, &
-assert 3 'int main() { int x; int y; x = 3; y = &x; return *y; }'
-assert 3 'int main() { int x; int y; int z; x = 3; y = 5; z = &y + 1; return *z; }'
+assert 3 'int main() { int x; int *y; x = 3; y = &x; return *y; }'
+assert 3 'int main() { int x; int y; int *z; x = 3; y = 5; z = &y + 1; return *z; }'
 
 # pointer type
 assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x; }'

@@ -80,15 +80,16 @@ Node *new_node_num(int val) {
   return node;
 }
 
-LVar *new_lvar(Token *ident, LVar *next_lvar) {
+LVar *new_lvar(Token *ident, LVar *next_lvar, Type *type) {
   LVar *lvar = calloc(1, sizeof(LVar));
   lvar->next = locals;
   lvar->name = ident->str;
   lvar->len = ident->len;
+  lvar->type = type;
   if (locals == NULL) {
-    lvar->offset = 8;
+    lvar->offset = type_size(type);
   } else {
-    lvar->offset = locals->offset + 8;
+    lvar->offset = locals->offset + type_size(type);
   }
   return lvar;
 }
@@ -129,7 +130,7 @@ Node *args() {
     Token *tok = consume_ident();
     cur->next = new_node(ND_LVAR, NULL, NULL);
     cur = cur->next;
-    LVar *lvar = new_lvar(tok, locals);
+    LVar *lvar = new_lvar(tok, locals, type_int);
     cur->offset = lvar->offset;
     locals = lvar;
 
@@ -139,7 +140,7 @@ Node *args() {
       tok = consume_ident();
       cur->next = new_node(ND_LVAR, NULL, NULL);
       cur = cur->next;
-      LVar *lvar = new_lvar(tok, locals);
+      LVar *lvar = new_lvar(tok, locals, type_int);
       cur->offset = lvar->offset;
       locals = lvar;
     }
@@ -160,14 +161,15 @@ Node *function() {
   char *func_name = calloc(tok->len, sizeof(char));
   strncpy(func_name, tok->str, tok->len);
   node->name = func_name;
-
   // Parse arguments
   node->args = args();
 
   // Parse function bodies
-  node->body = compound_stmt()->body;
+  node->body = compound_stmt();
 
   node->locals = locals;
+  add_type(node);
+
   return node;
 }
 
@@ -191,7 +193,7 @@ Node *declaration() {
     Token *tok = consume_ident();
     cur->next = new_node(ND_DECLARE, NULL, NULL);
     cur = cur->next;
-    LVar *lvar = new_lvar(tok, locals);
+    LVar *lvar = new_lvar(tok, locals, type);
     cur->offset = lvar->offset;
     cur->type = type;
     locals = lvar;
@@ -214,6 +216,7 @@ Node *compound_stmt() {
 
   Node *node = new_node(ND_BLOCK, NULL, NULL);
   node->body = head.next;
+
   return node;
 }
 
@@ -340,8 +343,8 @@ Node *new_add(Node *lhs, Node *rhs) {
   }
 
   // ptr + num
-  if (lhs->type->ptr_to->ty == INT) {
-    rhs = new_node(ND_MUL, rhs, new_node_num(8));
+  if (is_integer(lhs->type->ptr_to)) {
+    rhs = new_node(ND_MUL, rhs, new_node_num(4));
   } else {
     rhs = new_node(ND_MUL, rhs, new_node_num(8));
   }
@@ -358,16 +361,14 @@ Node *new_sub(Node *lhs, Node *rhs) {
   if (is_integer(lhs->type) && is_integer(rhs->type)) {
     return new_node(ND_SUB, lhs, rhs);
   }
-  // num + ptr => ptr + num
+  // num - ptr => ptr - num
   if (is_integer(lhs->type) && is_pointer(rhs->type)) {
-    Node *tmp = lhs;
-    lhs = rhs;
-    rhs = lhs;
+    error_at(token->str, "`num - ptr` is invalid\n");
   }
 
-  // ptr + num
-  if (lhs->type->ptr_to->ty == INT) {
-    rhs = new_node(ND_MUL, rhs, new_node_num(8));
+  // ptr - num
+  if (is_integer(lhs->type->ptr_to)) {
+    rhs = new_node(ND_MUL, rhs, new_node_num(4));
   } else {
     rhs = new_node(ND_MUL, rhs, new_node_num(8));
   }
@@ -460,6 +461,7 @@ Node *primary() {
       LVar *lvar = find_lvar(tok);
       if (lvar) {
         node->offset = lvar->offset;
+        node->type = lvar->type;
       } else {
         error_at(tok->str, "undeclared local variables");
       }

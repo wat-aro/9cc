@@ -43,6 +43,7 @@ struct LVar {
   char *name; // 変数の名前
   int len;    // 名前の長さ
   int offset; // RBPからのオフセット
+  Type *type;
 };
 
 typedef struct Token Token;

@@ -12,6 +12,7 @@ Type *pointer_to(Type *ty) {
 }
 
 Type *type_int = &(Type){INT};
+Type *type_void = &(Type){VOID};
 
 void add_type(Node *node) {
   if (!node || node->type)
@@ -57,7 +58,27 @@ void add_type(Node *node) {
       node->type = node->lhs->type->ptr_to;
     else
       node->type = type_int;
+    return;
   case ND_FUNCTION_CALL:
     node->type = type_int;
+    return;
+  case ND_IF:
+  case ND_FOR:
+  case ND_BLOCK:
+  case ND_DECLARE:
+  case ND_FUNCTION:
+    node->type = type_void;
+    return;
+  }
+}
+
+int type_size(Type *type) {
+  switch (type->ty) {
+  case VOID:
+    return 0;
+  case INT:
+    return 4;
+  case PTR:
+    return 8;
   }
 }
