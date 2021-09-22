@@ -4,10 +4,20 @@ bool is_integer(Type *type) { return type->ty == INT; }
 
 bool is_pointer(Type *type) { return type->ty == PTR; }
 
+bool is_array(Type *type) { return type->ty == ARRAY; }
+
 Type *pointer_to(Type *ty) {
   Type *type = calloc(1, sizeof(Type));
   type->ty = PTR;
   type->ptr_to = ty;
+  return type;
+}
+
+Type *array_of(Type *ty, int size) {
+  Type *type = calloc(1, sizeof(Type));
+  type->ty = ARRAY;
+  type->ptr_to = ty;
+  type->array_size = size;
   return type;
 }
 
@@ -80,5 +90,7 @@ int type_size(Type *type) {
     return 4;
   case PTR:
     return 8;
+  case ARRAY:
+    return type->array_size * type_size(type->ptr_to);
   }
 }

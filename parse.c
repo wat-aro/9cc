@@ -180,7 +180,7 @@ Type *declaration_specifier() {
   return ty;
 }
 
-// declaration = declaration_specifier "*"* ident ";"
+// declaration = declaration_specifier "*"* ident ("[" num "]")?";"
 Node *declaration() {
   Type *type = declaration_specifier();
   Node head = {};
@@ -193,6 +193,11 @@ Node *declaration() {
     Token *tok = consume_ident();
     cur->next = new_node(ND_DECLARE, NULL, NULL);
     cur = cur->next;
+    if (consume("[")) {
+      int size = expect_number();
+      type = array_of(type, size);
+      expect("]");
+    }
     LVar *lvar = new_lvar(tok, locals, type);
     cur->offset = lvar->offset;
     cur->type = type;
@@ -343,7 +348,8 @@ Node *new_add(Node *lhs, Node *rhs) {
   }
 
   // ptr + num
-  if (is_integer(lhs->type->ptr_to)) {
+  if (is_integer(lhs->type->ptr_to) ||
+      (is_array(lhs->type->ptr_to) && is_integer(lhs->type->ptr_to->ptr_to))) {
     rhs = new_node(ND_MUL, rhs, new_node_num(4));
   } else {
     rhs = new_node(ND_MUL, rhs, new_node_num(8));
@@ -367,7 +373,8 @@ Node *new_sub(Node *lhs, Node *rhs) {
   }
 
   // ptr - num
-  if (is_integer(lhs->type->ptr_to)) {
+  if (is_integer(lhs->type->ptr_to) ||
+      (is_array(lhs->type->ptr_to) && is_integer(lhs->type->ptr_to->ptr_to))) {
     rhs = new_node(ND_MUL, rhs, new_node_num(4));
   } else {
     rhs = new_node(ND_MUL, rhs, new_node_num(8));
@@ -422,11 +429,23 @@ Node *unary() {
     return primary();
   if (consume("-"))
     return new_node(ND_SUB, new_node_num(0), unary());
-  if (consume("*"))
-    return new_node(ND_DEREF, unary(), NULL);
+  if (consume("*")) {
+    Node *node = unary();
+    add_type(node);
+    if (node->type->ty == ARRAY) {
+      return new_node(ND_DEREF, new_node(ND_ADDR, node, NULL), NULL);
+    } else {
+      return new_node(ND_DEREF, node, NULL);
+    }
+  }
   if (consume("&"))
     return new_node(ND_ADDR, unary(), NULL);
-  return primary();
+  Node *node = primary();
+  add_type(node);
+  if (node->type->ty == ARRAY) {
+    return new_node(ND_ADDR, node, NULL);
+  }
+  return node;
 }
 
 // primary = num

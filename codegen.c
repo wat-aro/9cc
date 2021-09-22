@@ -60,10 +60,10 @@ void gen(Node *node) {
 
     printf("  pop rdi\n");
     printf("  pop rax\n");
-    if (node->lhs->type->ty == INT) {
-      printf("  mov [rax], edi\n");
-    } else {
+    if (node->lhs->type->ty == PTR) {
       printf("  mov [rax], rdi\n");
+    } else {
+      printf("  mov [rax], edi\n");
     }
     return;
   case ND_RETURN:

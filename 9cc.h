@@ -31,8 +31,9 @@ struct Token {
 };
 
 struct Type {
-  enum { VOID, INT, PTR } ty;
+  enum { VOID, INT, PTR, ARRAY } ty;
   struct Type *ptr_to;
+  size_t array_size;
 };
 
 typedef struct Type Type;
@@ -113,7 +114,9 @@ void codegen();
 
 bool is_integer(Type *type);
 bool is_pointer(Type *type);
+bool is_array(Type *type);
 Type *pointer_to(Type *ty);
+Type *array_of(Type *ty, int size);
 void add_type(Node *node);
 
 extern Type *type_int;
