@@ -111,5 +111,6 @@ assert 8 'int main() { int *x; return sizeof(x); }'
 # Array
 assert 3 'int main() { int x[10]; *x = 3; return *x; }'
 assert 3 'int main() { int a[2]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p + *(p + 1); }'
+assert 3 'int main() { int a[2]; *a = 1; a[1] = 2; int *p; p = a; return *p + *(p + 1); }'
 
 echo OK

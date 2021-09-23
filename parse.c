@@ -105,6 +105,7 @@ Node *relational();
 Node *add();
 Node *mul();
 Node *unary();
+Node *postfix();
 Node *primary();
 
 // program = stmt*
@@ -417,11 +418,9 @@ Node *new_sizeof() {
   return new_node_num(size);
 }
 
-// unary = "sizeof" unary
-//       | "+"? primary
-//       | "-"? primary
-//       | "*" unary
-//       | "&" unary
+// unary = ("sizeof" | "*" | "&") unary
+//       | ("+" | "-") primary
+//       | postfix
 Node *unary() {
   if (consume("sizeof"))
     return new_sizeof();
@@ -440,9 +439,25 @@ Node *unary() {
   }
   if (consume("&"))
     return new_node(ND_ADDR, unary(), NULL);
+  return postfix();
+}
+
+// postfix = primary ("[" expr "]")?
+Node *postfix() {
   Node *node = primary();
+
+  if (consume("[")) { // a[ expr ] => *( a + expr )
+    Node *rhs = expr();
+    expect("]");
+
+    if (node->type->ty == ARRAY) {
+      node = new_node(ND_ADDR, node, NULL);
+    }
+    Node *n = new_add(node, rhs);
+    node = new_node(ND_DEREF, n, NULL);
+  }
   add_type(node);
-  if (node->type->ty == ARRAY) {
+  if (node->kind == ND_LVAR && node->type->ty == ARRAY) {
     return new_node(ND_ADDR, node, NULL);
   }
   return node;
@@ -459,47 +474,46 @@ Node *primary() {
   }
 
   Token *tok = consume_ident();
-  if (tok) {
-    Node *node = calloc(1, sizeof(Node));
-    // funcation call
-    if (consume("(")) {
-      node->kind = ND_FUNCTION_CALL;
-      char *str = calloc(tok->len, sizeof(char));
-      memcpy(str, tok->str, tok->len);
-      node->name = str;
-
-      // arguments
-      Node head = {};
-      Node *cur = &head;
-      if (!consume(")")) {
-        cur->next = expr();
-        int arg_length = 1;
-        while (!consume(")")) {
-          expect(",");
-          arg_length++;
-          if (arg_length > 6)
-            error_at(token->str, "引数は6個までです");
-          cur = cur->next;
-          cur->next = expr();
-        }
-      }
-      node->args = head.next;
-    } else { // variable
-      node->kind = ND_LVAR;
-
-      LVar *lvar = find_lvar(tok);
-      if (lvar) {
-        node->offset = lvar->offset;
-        node->type = lvar->type;
-      } else {
-        error_at(tok->str, "undeclared local variables");
-      }
-    }
+  if (!tok) {
+    Node *node = new_node_num(expect_number());
+    node->type = type_int;
     return node;
   }
 
-  Node *node = new_node_num(expect_number());
-  node->type = type_int;
+  Node *node = calloc(1, sizeof(Node));
+  if (consume("(")) { // funcation call
+    node->kind = ND_FUNCTION_CALL;
+    char *str = calloc(tok->len, sizeof(char));
+    memcpy(str, tok->str, tok->len);
+    node->name = str;
+
+    // arguments
+    Node head = {};
+    Node *cur = &head;
+    if (!consume(")")) {
+      cur->next = expr();
+      int arg_length = 1;
+      while (!consume(")")) {
+        expect(",");
+        arg_length++;
+        if (arg_length > 6)
+          error_at(token->str, "引数は6個までです");
+        cur = cur->next;
+        cur->next = expr();
+      }
+    }
+    node->args = head.next;
+  } else { // variable
+    node->kind = ND_LVAR;
+
+    LVar *lvar = find_lvar(tok);
+    if (lvar) {
+      node->offset = lvar->offset;
+      node->type = lvar->type;
+    } else {
+      error_at(tok->str, "undeclared local variables");
+    }
+  }
   return node;
 }
 
