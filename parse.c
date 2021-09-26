@@ -6,9 +6,19 @@ Token *token;
 // ローカル変数
 LVar *locals;
 
+// グローバル変数
+GVar *globals;
+
 // 変数を名前で検索する。見つからなかった場合はNULLを返す。
 LVar *find_lvar(Token *tok) {
   for (LVar *var = locals; var; var = var->next)
+    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+      return var;
+  return NULL;
+}
+
+GVar *find_gvar(Token *tok) {
+  for (GVar *var = globals; var; var = var->next)
     if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
       return var;
   return NULL;
@@ -94,8 +104,19 @@ LVar *new_lvar(Token *ident, LVar *next_lvar, Type *type) {
   return lvar;
 }
 
+void new_gvar(Token *ident, Type *type) {
+  GVar *gvar = calloc(1, sizeof(GVar));
+  char *gvar_name = calloc(ident->len, sizeof(char));
+  strncpy(gvar_name, ident->str, ident->len);
+  gvar->name = gvar_name;
+  gvar->len = ident->len;
+  gvar->next = globals;
+  gvar->type = type;
+  globals = gvar;
+}
+
 Node **program();
-Node *function();
+Node *external_definition();
 Node *compound_stmt();
 Node *stmt();
 Node *expr();
@@ -108,15 +129,15 @@ Node *unary();
 Node *postfix();
 Node *primary();
 
-// program = stmt*
+// program = (external_definition)*
 Node **program() {
   Node **code = calloc(100, sizeof(Node));
   int i = 0;
   while (!at_eof()) {
-    code[i++] = function();
+    code[i++] = external_definition();
   }
-  code[i] = NULL;
 
+  code[i] = NULL;
   return code;
 }
 
@@ -150,35 +171,57 @@ Node *args() {
   return head.next;
 }
 
-// function = "int" ident args compound_stmt
-Node *function() {
-  expect("int");
-  locals = NULL;
-  Node *node = new_node(ND_FUNCTION, NULL, NULL);
-  Token *tok = consume_ident();
-  if (!tok)
-    error_at(tok->str, "Expected function name\n");
-  // Parse function name
-  char *func_name = calloc(tok->len, sizeof(char));
-  strncpy(func_name, tok->str, tok->len);
-  node->name = func_name;
-  // Parse arguments
-  node->args = args();
-
-  // Parse function bodies
-  node->body = compound_stmt();
-
-  node->locals = locals;
-  add_type(node);
-
-  return node;
-}
-
 // declaration_specifier = "int"
 Type *declaration_specifier() {
   expect("int");
   Type *ty = type_int;
   return ty;
+}
+
+// external_definition = "int" "*"* ident ("[" expr "]" | args compound_stmt)?
+Node *external_definition() {
+  Type *type = declaration_specifier();
+  while (consume("*"))
+    type = pointer_to(type);
+
+  Token *tok = consume_ident();
+  if (!tok)
+    error_at(tok->str, "Expected function name\n");
+
+  if (equal("(")) { // function
+    locals = NULL;
+    Node *node = new_node(ND_FUNCTION, NULL, NULL);
+    // Parse function name
+    char *func_name = calloc(tok->len, sizeof(char));
+    strncpy(func_name, tok->str, tok->len);
+    node->name = func_name;
+    // Parse arguments
+    node->args = args();
+
+    // Parse function bodies
+    node->body = compound_stmt();
+
+    node->locals = locals;
+    add_type(node);
+
+    return node;
+  } else if (equal("[")) {
+    consume("[");
+    int size = expect_number();
+    type = array_of(type, size);
+    new_gvar(tok, type);
+    Node *node = new_node(ND_DECLARE, NULL, NULL);
+    node->type = type;
+    expect("]");
+    expect(";");
+    return node;
+  } else {
+    new_gvar(tok, type);
+    Node *node = new_node(ND_DECLARE, NULL, NULL);
+    node->type = type;
+    expect(";");
+    return node;
+  }
 }
 
 // declaration = declaration_specifier "*"* ident ("[" num "]")?";"
@@ -503,18 +546,27 @@ Node *primary() {
       }
     }
     node->args = head.next;
-  } else { // variable
-    node->kind = ND_LVAR;
-
+    return node;
+  } else {
+    // local variable
     LVar *lvar = find_lvar(tok);
     if (lvar) {
+      node->kind = ND_LVAR;
       node->offset = lvar->offset;
       node->type = lvar->type;
-    } else {
-      error_at(tok->str, "undeclared local variables");
+      return node;
     }
+    // global variable
+    GVar *gvar = find_gvar(tok);
+    if (gvar) {
+      node->kind = ND_GVAR;
+      node->type = gvar->type;
+      node->name = gvar->name;
+      return node;
+    }
+
+    error_at(tok->str, "undeclared local variables");
   }
-  return node;
 }
 
 Node **parse(Token *tok) {

@@ -1,5 +1,7 @@
 #include "9cc.h"
 
+extern GVar *globals;
+
 void gen(Node *node);
 
 char *argument_register[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
@@ -12,16 +14,21 @@ int jump_count() {
 }
 
 void gen_lval(Node *node) {
-  if (node->kind == ND_DEREF) {
+  switch (node->kind) {
+  case ND_DEREF:
     gen(node->lhs);
     return;
-  } else if (node->kind != ND_LVAR) {
+  case ND_LVAR:
+    printf("  lea rax, [rbp - %d]\n", node->offset);
+    printf("  push rax\n");
+    return;
+  case ND_GVAR:
+    printf("  lea rax, [rip + %s]\n", node->name);
+    printf("  push rax\n");
+    return;
+  default:
     error("代入の左辺値が変数ではありません");
   }
-
-  printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->offset);
-  printf("  push rax\n");
 }
 
 void gen_args(Node *node) {
@@ -45,6 +52,7 @@ void gen(Node *node) {
     printf("  push %d\n", node->val);
     return;
   case ND_LVAR:
+  case ND_GVAR:
     gen_lval(node);
     printf("  pop rax\n");
     if (node->type->ty == INT) {
@@ -225,9 +233,16 @@ extern Node *code[100];
 void codegen(Node **code) {
   // アセンブリの前半部分を出力
   printf(".intel_syntax noprefix\n");
-  printf(".globl main\n");
 
+  // グローバル変数を出力する
+  for (GVar *g = globals; g; g = g->next) {
+    printf(".bss\n");
+    printf("%s:\n", g->name);
+    printf("  .zero %d\n", type_size(g->type));
+  }
   // 先頭の式から順にコード生成
+  printf(".text\n");
+  printf(".globl main\n");
   for (int i = 0; code[i]; i++) {
     gen(code[i]);
   }

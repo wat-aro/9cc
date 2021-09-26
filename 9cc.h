@@ -48,6 +48,14 @@ struct LVar {
   Type *type;
 };
 
+typedef struct GVar GVar;
+struct GVar {
+  GVar *next;
+  char *name;
+  int len;
+  Type *type;
+};
+
 typedef struct Token Token;
 
 Token *tokenize(char *p);
@@ -66,6 +74,7 @@ typedef enum {
   ND_LE,            // <=
   ND_ASSIGN,        // =
   ND_LVAR,          // ローカル変数
+  ND_GVAR,          // グローバル変数
   ND_NUM,           // integer
   ND_RETURN,        // return
   ND_IF,            // if

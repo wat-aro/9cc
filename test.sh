@@ -113,4 +113,12 @@ assert 3 'int main() { int x[10]; *x = 3; return *x; }'
 assert 3 'int main() { int a[2]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p + *(p + 1); }'
 assert 3 'int main() { int a[2]; *a = 1; a[1] = 2; int *p; p = a; return *p + *(p + 1); }'
 
+# Global variables
+assert 5 'int x; int main() { x = 3; return x + 2; }'
+assert 7 'int x; int y; int main() { x = 3; y = 4; return x + y; }'
+assert 5 'int b[10]; int main() { b[3] = 5; return b[3]; }'
+assert 63 'int b[10]; int main() { int d; d = 9; b[3] = 7; return b[3] * d; }'
+assert 16 'int b[10]; int main() { int d; d = 9; b[3] = 7; return b[3] + d; }'
+assert 8 'int b[10]; int c[2]; int main() { c[1] = 3; int d; d = c[1] * 2; b[d] = 5; return c[1] + b[6];}'
+
 echo OK
