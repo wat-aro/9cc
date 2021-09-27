@@ -65,7 +65,11 @@ void add_type(Node *node) {
     return;
   case ND_DEREF:
     if (node->lhs->type->ty == PTR)
-      node->type = node->lhs->type->ptr_to;
+      if (node->lhs->type->ptr_to->ty == ARRAY) {
+        node->type = node->lhs->type->ptr_to->ptr_to;
+      } else {
+        node->type = node->lhs->type->ptr_to;
+      }
     else
       node->type = type_int;
     return;

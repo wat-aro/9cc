@@ -112,6 +112,10 @@ assert 8 'int main() { int *x; return sizeof(x); }'
 assert 3 'int main() { int x[10]; *x = 3; return *x; }'
 assert 3 'int main() { int a[2]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p + *(p + 1); }'
 assert 3 'int main() { int a[2]; *a = 1; a[1] = 2; int *p; p = a; return *p + *(p + 1); }'
+assert 3 'int main() { int a[10]; *a = 1; a[1] = 2; int *p; p = a; return *(p + 1) + *p; }'
+assert 63 'int main() { int b[10]; int d; d = 9; b[3] = 7; return b[3] * d; }'
+assert 16 'int main() { int b[10]; int d; d = 9; b[3] = 7; return *(b + 3) + d; }'
+assert 16 'int main() { int b[10]; int d; d = 9; b[3] = 7; return b[3] + d; }'
 
 # Global variables
 assert 5 'int x; int main() { x = 3; return x + 2; }'
