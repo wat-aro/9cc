@@ -233,7 +233,7 @@ void codegen(Node **code) {
   for (GVar *g = globals; g; g = g->next) {
     printf(".bss\n");
     printf("%s:\n", g->name);
-    printf("  .zero %d\n", type_size(g->type));
+    printf("  .zero %d\n", g->type->size);
   }
   // 先頭の式から順にコード生成
   printf(".text\n");

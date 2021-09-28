@@ -97,9 +97,9 @@ LVar *new_lvar(Token *ident, LVar *next_lvar, Type *type) {
   lvar->len = ident->len;
   lvar->type = type;
   if (locals == NULL) {
-    lvar->offset = type_size(type);
+    lvar->offset = type->size;
   } else {
-    lvar->offset = locals->offset + type_size(type);
+    lvar->offset = locals->offset + type->size;
   }
   return lvar;
 }
@@ -457,8 +457,7 @@ Node *mul() {
 Node *new_sizeof() {
   Node *node = unary();
   add_type(node);
-  int size = type_size(node->type);
-  return new_node_num(size);
+  return new_node_num(node->type->size);
 }
 
 // unary = ("sizeof" | "*" | "&") unary

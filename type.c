@@ -10,6 +10,7 @@ Type *pointer_to(Type *ty) {
   Type *type = calloc(1, sizeof(Type));
   type->ty = PTR;
   type->ptr_to = ty;
+  type->size = 8;
   return type;
 }
 
@@ -18,11 +19,12 @@ Type *array_of(Type *ty, int size) {
   type->ty = ARRAY;
   type->ptr_to = ty;
   type->array_size = size;
+  type->size = size * type->ptr_to->size;
   return type;
 }
 
-Type *type_int = &(Type){INT};
-Type *type_void = &(Type){VOID};
+Type *type_int = &(Type){INT, 4};
+Type *type_void = &(Type){VOID, 0};
 
 void add_type(Node *node) {
   if (!node || node->type)
@@ -83,18 +85,5 @@ void add_type(Node *node) {
   case ND_FUNCTION:
     node->type = type_void;
     return;
-  }
-}
-
-int type_size(Type *type) {
-  switch (type->ty) {
-  case VOID:
-    return 0;
-  case INT:
-    return 4;
-  case PTR:
-    return 8;
-  case ARRAY:
-    return type->array_size * type_size(type->ptr_to);
   }
 }
