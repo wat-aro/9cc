@@ -57,6 +57,8 @@ void gen(Node *node) {
     printf("  pop rax\n");
     if (node->type->ty == INT) {
       printf("  mov eax, [rax]\n");
+    } else if (node->type->ty == CHAR) {
+      printf("  movzx eax, [rax]\n");
     } else {
       printf("  mov rax, [rax]\n");
     }
@@ -70,8 +72,10 @@ void gen(Node *node) {
     printf("  pop rax\n");
     if (node->lhs->type->ty == PTR) {
       printf("  mov [rax], rdi\n");
-    } else {
+    } else if (node->lhs->type->ty == INT) {
       printf("  mov [rax], edi\n");
+    } else if (node->lhs->type->ty == CHAR) {
+      printf("  mov [rax], dil\n");
     }
     return;
   case ND_RETURN:
@@ -155,6 +159,8 @@ void gen(Node *node) {
       printf("  pop rax\n");
       if (n->type->ty == INT) {
         printf("  mov [rax], edi\n");
+      } else if (n->type->ty == CHAR) {
+        printf("  mov [rax], dil\n");
       } else {
         printf("  mov [rax], rdi\n");
       }

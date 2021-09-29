@@ -31,7 +31,7 @@ struct Token {
 };
 
 struct Type {
-  enum { VOID, INT, PTR, ARRAY } ty;
+  enum { VOID, INT, PTR, ARRAY, CHAR } ty;
   int size;
   struct Type *ptr_to;
   size_t array_size;
@@ -130,3 +130,4 @@ Type *array_of(Type *ty, int size);
 void add_type(Node *node);
 
 extern Type *type_int;
+extern Type *type_char;

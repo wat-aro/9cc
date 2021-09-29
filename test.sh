@@ -125,4 +125,8 @@ assert 63 'int b[10]; int main() { int d; d = 9; b[3] = 7; return b[3] * d; }'
 assert 16 'int b[10]; int main() { int d; d = 9; b[3] = 7; return b[3] + d; }'
 assert 8 'int b[10]; int c[2]; int main() { c[1] = 3; int d; d = c[1] * 2; b[d] = 5; return c[1] + b[6];}'
 
+# Char
+assert 3 'int main() { char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y; }'
+assert 5 'char x[3]; int y; int main() { x[0] = -1; x[1] = 2; y = 6; return x[0] + y; }'
+
 echo OK

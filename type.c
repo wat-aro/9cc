@@ -1,6 +1,6 @@
 #include "9cc.h"
 
-bool is_integer(Type *type) { return type->ty == INT; }
+bool is_integer(Type *type) { return type->ty == INT || type->ty == CHAR; }
 
 bool is_pointer(Type *type) { return type->ty == PTR; }
 
@@ -25,6 +25,7 @@ Type *array_of(Type *ty, int size) {
 
 Type *type_int = &(Type){INT, 4};
 Type *type_void = &(Type){VOID, 0};
+Type *type_char = &(Type){CHAR, 1};
 
 void add_type(Node *node) {
   if (!node || node->type)

@@ -116,6 +116,7 @@ void new_gvar(Token *ident, Type *type) {
 }
 
 Node **program();
+Type *declaration_specifier();
 Node *external_definition();
 Node *compound_stmt();
 Node *stmt();
@@ -148,21 +149,22 @@ Node *args() {
   Node *cur = &head;
 
   if (!consume(")")) {
-    expect("int");
+    Type *type = declaration_specifier();
     Token *tok = consume_ident();
     cur->next = new_node(ND_LVAR, NULL, NULL);
     cur = cur->next;
-    LVar *lvar = new_lvar(tok, locals, type_int);
+    LVar *lvar = new_lvar(tok, locals, type);
     cur->offset = lvar->offset;
     locals = lvar;
 
     while (!consume(")")) {
       expect(",");
-      expect("int");
+
+      type = declaration_specifier();
       tok = consume_ident();
       cur->next = new_node(ND_LVAR, NULL, NULL);
       cur = cur->next;
-      LVar *lvar = new_lvar(tok, locals, type_int);
+      LVar *lvar = new_lvar(tok, locals, type);
       cur->offset = lvar->offset;
       locals = lvar;
     }
@@ -171,14 +173,19 @@ Node *args() {
   return head.next;
 }
 
-// declaration_specifier = "int"
+// declaration_specifier = "int" | "char"
 Type *declaration_specifier() {
-  expect("int");
-  Type *ty = type_int;
-  return ty;
+  if (consume("int")) {
+    return type_int;
+  } else if (consume("char")) {
+    return type_char;
+  } else {
+    error_at(token->str, "Unknown type");
+  }
 }
 
-// external_definition = "int" "*"* ident ("[" expr "]" | args compound_stmt)?
+// external_definition = declaration_specifier "*"* ident ("[" expr "]" | args
+// compound_stmt)?
 Node *external_definition() {
   Type *type = declaration_specifier();
   while (consume("*"))
@@ -257,7 +264,7 @@ Node *compound_stmt() {
   Node head = {};
   Node *cur = &head;
   while (!consume("}")) {
-    if (equal("int"))
+    if (equal("int") || equal("char"))
       cur = cur->next = declaration();
     else
       cur = cur->next = stmt();
